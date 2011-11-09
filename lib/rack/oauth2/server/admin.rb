@@ -78,7 +78,11 @@ module Rack
         set :logger, ::Rails.logger if defined?(::Rails)
         # Number of tokens to return in each page.
         set :tokens_per_page, 100
-        set :public, ::File.dirname(__FILE__) + "/../admin"
+        if ::Sinatra::VERSION.split('.')[1].to_i >= 3
+          set :public_folder, ::File.dirname(__FILE__) + "/../admin"
+        else
+          set :public, ::File.dirname(__FILE__) + "/../admin"
+        end
         set :method_override, true
         mime_type :js, "text/javascript"
         mime_type :tmpl, "text/x-jquery-template"
@@ -95,13 +99,21 @@ module Rack
 
         # It's a single-page app, this is that single page.
         get "/" do
-          send_file settings.public + "/views/index.html"
+          if ::Sinatra::VERSION.split('.')[1].to_i >= 3
+            send_file settings.public_folder + "/views/index.html"
+          else
+            send_file settings.public + "/views/index.html"
+          end
         end
 
         # Service JavaScript, CSS and jQuery templates from the gem.
         %w{js css views}.each do |path|
           get "/#{path}/:name" do
-            send_file settings.public + "/#{path}/" + params[:name]
+            if ::Sinatra::VERSION.split('.')[1].to_i >= 3
+              send_file settings.public_folder + "/#{path}/" + params[:name]
+            else
+              send_file settings.public + "/#{path}/" + params[:name]
+            end
           end
         end
 

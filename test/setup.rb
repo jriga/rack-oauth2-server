@@ -14,8 +14,12 @@ require "rack/oauth2/server/admin"
 
 
 ENV["RACK_ENV"] = "test"
-ENV["DB"] = "rack_oauth2_server_test"
-DATABASE = Mongo::Connection.new[ENV["DB"]]
+ENV["DB"] ||= "rack_oauth2_server_test"
+
+#DATABASE = Mongo::Connection.from_uri(ENV["DB"])
+DATABASE = Mongo::Connection.new(ENV['DB_HOST']).db(ENV['DB'])
+
+
 FRAMEWORK = ENV["FRAMEWORK"] || "sinatra"
 
 
