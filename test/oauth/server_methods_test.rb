@@ -9,7 +9,15 @@ class ServerTest < Test::Unit::TestCase
 
   context "configuration" do
     should "set oauth.database" do
-      assert_equal DATABASE, Server.database
+      uri = URI.parse(DATABASE)
+      case uri.scheme
+      when 'mongodb'
+        assert_equal Mongo::DB, Server.database.class
+      when 'mysql'
+        assert_equal ActiveRecord::Base, Server.database.class
+      else
+        assert_equal DATABASE, Server.database
+      end
     end
 
     should "set oauth.host" do
@@ -48,7 +56,12 @@ class ServerTest < Test::Unit::TestCase
       end
 
       should "create new client" do
-        assert_equal 2, Server::Client.collection.count
+        case DATABASE_ADAPTER
+        when 'mongodb'
+          assert_equal 2, Server::Client.collection.count
+        when 'mysql'
+          assert_equal 2, Server::Client.count
+        end
         assert_contains Server::Client.all.map(&:id), @client.id
       end
 
@@ -89,7 +102,14 @@ class ServerTest < Test::Unit::TestCase
         end
 
         should "create new client" do
-          assert_equal 2, Server::Client.collection.count
+
+          case DATABASE_ADAPTER
+          when 'mongodb'
+            assert_equal 2, Server::Client.collection.count
+          when 'mysql'
+            assert_equal 2, Server::Client.count
+          end
+
         end
 
         should "should assign it the client identifier" do
@@ -112,7 +132,12 @@ class ServerTest < Test::Unit::TestCase
         end
 
         should "not create new client" do
-          assert_equal 2, Server::Client.collection.count
+          case DATABASE_ADAPTER
+          when 'mongodb'
+            assert_equal 2, Server::Client.collection.count
+          when 'mysql'
+            assert_equal 2, Server::Client.count
+          end
         end
 
         should "should not change the client identifier" do

@@ -192,7 +192,7 @@ module Rack
         put "/api/client/:id" do
           client = Server::Client.find(params[:id])
           begin
-            client.update validate_params(params)
+            client.update_attrs validate_params(params)
             redirect "#{request.script_name}/api/client/#{client.id}"
           rescue
             halt 400, $!.message

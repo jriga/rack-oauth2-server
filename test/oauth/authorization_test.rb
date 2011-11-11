@@ -289,7 +289,14 @@ class AuthorizationTest < Test::Unit::TestCase
 
   context "unregistered redirect URI" do
     setup do
-      Rack::OAuth2::Server::Client.collection.update({ :_id=>client._id }, { :$set=>{ :redirect_uri=>nil } })
+      case DATABASE_ADAPTER
+      when 'mongodb'
+        Rack::OAuth2::Server::Client.collection.update({ :_id=>client._id }, { :$set=>{ :redirect_uri=>nil } })
+      when 'mysql'
+        client.update_attributes(:redirect_uri=>nil)
+      else
+        raise "unknown db adapter #{DATABASE_ADAPTER}"
+      end
       request_authorization :redirect_uri=>"http://uberclient.dot/oz"
     end
     should_ask_user_for_authorization

@@ -21,6 +21,7 @@ module Rack
         # oauth.authorization)
         # @return [AuthReqeust]
         def get_auth_request(authorization)
+          init_db
           AuthRequest.find(authorization)
         end
 
@@ -29,6 +30,7 @@ module Rack
         # @param [String] client_id Client identifier (e.g. from oauth.client.id)
         # @return [Client]
         def get_client(client_id)
+          init_db
           Client.find(client_id)
         end
 
@@ -64,9 +66,10 @@ module Rack
         #     :scope=>config["scope"],
         #     :redirect_uri=>"http://example.com/oauth/callback"
         def register(args)
+          init_db
           if args[:id] && args[:secret] && (client = get_client(args[:id]))
             fail "Client secret does not match" unless client.secret == args[:secret]
-            client.update args
+            client.update_attrs args
           else
             Client.create(args)
           end
@@ -83,6 +86,7 @@ module Rack
         # expires (default to 5 minutes)
         # @return [String] Access grant authorization code
         def access_grant(identity, client_id, scope = nil, expires_in = nil)
+          init_db
           client = get_client(client_id) or fail "No such client"
           AccessGrant.create(identity, client, scope || client.scope, nil, expires_in).code
         end
@@ -92,6 +96,7 @@ module Rack
         # @param [String] token Access token (e.g. from oauth.access_token)
         # @return [AccessToken]
         def get_access_token(token)
+          init_db
           AccessToken.from_token(token)
         end
 
@@ -106,6 +111,7 @@ module Rack
         # expires, defaults to never. If zero or nil, token never expires.
         # @return [String] Access token
         def token_for(identity, client_id, scope = nil, expires_in = nil)
+          init_db
           client = get_client(client_id) or fail "No such client"
           AccessToken.get_token_for(identity, client, scope || client.scope, expires_in).token
         end
@@ -115,7 +121,13 @@ module Rack
         # @param [String] identity Identity, e.g. user ID, account ID
         # @return [Array<AccessToken>]
         def list_access_tokens(identity)
+          init_db
           AccessToken.from_identity(identity)
+        end
+
+        protected
+        def init_db
+          database
         end
 
       end
@@ -131,7 +143,9 @@ module Rack
       #   these names.
       # - :authorize_path --  Path for requesting end-user authorization. By
       #   convention defaults to /oauth/authorize.
-      # - :database -- Mongo::DB instance (this is a global option).
+      # - :database -- uri to the desired database (this is a global option).
+      #   mongodb://username:password@localhost:27017/database or
+      #   mysql://username:password@localhost:3306/database
       # - :expires_in -- Number of seconds an auth token will live. If nil or
       #   zero, access token never expires.
       # - :host -- Only check requests sent to this host.
@@ -152,7 +166,7 @@ module Rack
       #     user if user && user.authenticated?(password)
       #   end
       Options = Struct.new(:access_token_path, :authenticator, :authorization_types,
-        :authorize_path, :database, :host, :param_authentication, :path, :realm, 
+        :authorize_path, :database, :database_adapter, :host, :param_authentication, :path, :realm, 
         :expires_in,:logger)
 
       # Global options. This is what we set during configuration (e.g. Rails'
@@ -381,6 +395,7 @@ module Rack
           else
             raise UnsupportedGrantType
           end
+
           logger.info "RO2S: Access token #{access_token.token} granted to client #{client.display_name}, identity #{access_token.identity}" if logger
           response = { :access_token=>access_token.token }
           response[:scope] = access_token.scope.join(" ")
@@ -412,8 +427,15 @@ module Rack
         end
         raise InvalidClientError if client.revoked
         return client
-      rescue BSON::InvalidObjectId
-        raise InvalidClientError
+
+
+#        rescue ActiveRecord::RecordNotFound
+#          raise InvalidClientError
+        
+        
+     # rescue BSON::InvalidObjectId => e
+       #   raise InvalidClientError
+        
       end
 
       # Rack redirect response.

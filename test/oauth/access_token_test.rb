@@ -61,7 +61,15 @@ class AccessTokenTest < Test::Unit::TestCase
   end
   
   def expire
-    Rack::OAuth2::Server::AccessToken.collection.update({ :_id => @token }, { :$set=> { :expires_at => (Time.now - 1).to_i } })
+    case DATABASE_ADAPTER
+    when 'mongodb'
+      Rack::OAuth2::Server::AccessToken.collection.update({ :_id => @token }, { :$set=> { :expires_at => (Time.now - 1).to_i } })
+    when 'mysql'
+      token = Rack::OAuth2::Server::AccessToken.find(@token)
+      token.update_attributes(:expires_at => (Time.now - 1).to_i)
+    else
+      raise "Does not know how to expire with database adapter #{DATABASE_ADAPTER}"
+    end
   end
   
   def with_expired_token

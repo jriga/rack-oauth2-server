@@ -14,12 +14,11 @@ require "rack/oauth2/server/admin"
 
 
 ENV["RACK_ENV"] = "test"
-ENV["DB"] ||= "rack_oauth2_server_test"
+ENV["DB"] ||= "mongodb://localhost:27017/rack_oauth2_server_test"
+puts "Using database: #{ENV['DB']}"
+DATABASE =ENV["DB"]
 
-#DATABASE = Mongo::Connection.from_uri(ENV["DB"])
-DATABASE = Mongo::Connection.new(ENV['DB_HOST']).db(ENV['DB'])
-
-
+DATABASE_ADAPTER = URI.parse(DATABASE).scheme
 FRAMEWORK = ENV["FRAMEWORK"] || "sinatra"
 
 
@@ -27,7 +26,7 @@ $logger = Logger.new("test.log")
 $logger.level = Logger::DEBUG
 Rack::OAuth2::Server::Admin.configure do |config|
   config.set :logger, $logger
-  config.set :logging, true
+  config.set :logging, true 
   config.set :raise_errors, true
   config.set :dump_errors, true
   config.oauth.expires_in = 86400 # a day
@@ -117,9 +116,9 @@ class Test::Unit::TestCase
   attr_reader :client, :end_user
 
   def teardown
-    Server::Client.collection.drop
-    Server::AuthRequest.collection.drop
-    Server::AccessGrant.collection.drop
-    Server::AccessToken.collection.drop
+    Server::Client.collection.drop rescue Server::Client.delete_all
+    Server::AuthRequest.collection.drop rescue Server::AuthRequest.delete_all
+    Server::AccessGrant.collection.drop rescue Server::AccessGrant.delete_all
+    Server::AccessToken.collection.drop rescue Server::AccessToken.delete_all
   end
 end

@@ -1,4 +1,4 @@
-require "mongo"
+require "uri"
 require "openssl"
 require "rack/oauth2/server/errors"
 require "rack/oauth2/server/utils"
@@ -36,22 +36,23 @@ module Rack
           end
         end
  
-        # A Mongo::DB object.
         def database
-          @database ||= Server.options.database
-          raise "No database Configured. You must configure it using Server.options.database = Mongo::Connection.new()[db_name]" unless @database
-          raise "You set Server.database to #{Server.database.class}, should be a Mongo::DB object" unless Mongo::DB === @database
-          @database
+          return @database if @database
+          raise "No database Configured. You must configure it using Server.options.database = (mongodb://username:password@localhost:27017/database || mysql://username:password@localhost:3306/database)" unless Server.options.database
+          
+          begin
+            db_uri =  URI.parse(Server.options.database)
+            
+            require ::File.dirname(__FILE__) + "/models/adapters/#{db_uri.scheme}_adapter"
+            @database_adapter = db_uri.scheme
+            @database = Adapter.connect!(Server.options.database)
+          rescue
+            raise "Unknown database adapter '#{db_uri.scheme}'. Use mongodb://username:password@localhost:27017/database or mysql://username:password@localhost:3306/database"
+          end
+          
         end
       end
  
     end
   end
 end
-
-
-require "rack/oauth2/models/client"
-require "rack/oauth2/models/auth_request"
-require "rack/oauth2/models/access_grant"
-require "rack/oauth2/models/access_token"
-
