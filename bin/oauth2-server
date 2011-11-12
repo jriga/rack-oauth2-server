@@ -8,10 +8,10 @@ include Rack::OAuth2
 if (i = ARGV.index("--db")) && ARGV[i+1]
   url = ARGV[i + 1]
   uri = URI.parse(url)
-  uri = URI.parse("mongo://#{url}") if uri.opaque
-  db = Mongo::Connection.new(uri.host, uri.port)[uri.path.sub(/^\//, "")]
-  db.authenticate uri.user, uri.password if uri.user
-  Server.options.database = db
+  fail "URI scheme missing!\nUse either mongodb:// or mysql://" if uri.opaque
+  Server.options.database = uri.to_s
+  Server.database
+
   ARGV[i,2] = []
 end
 if (i = ARGV.index("--port") || ARGV.index("-p")) && ARGV[i+1]

@@ -11,7 +11,9 @@ module Rack
             raise 'This does not quite work yet!!'
           rescue
             db_uri = URI.parse(uri)
-            Mongo::Connection.new(db_uri.host,db_uri.port).db(db_uri.path.sub(/\//,''))
+            db = Mongo::Connection.new(db_uri.host,db_uri.port).db(db_uri.path.sub(/^\//,''))
+            db.authenticate(db_uri.user, db_uri.password) if db_uri.user
+            db
           end
         end
       end

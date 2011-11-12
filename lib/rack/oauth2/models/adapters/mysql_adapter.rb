@@ -122,6 +122,8 @@ module Rack
 
         validates_uniqueness_of :id
 
+        attr_reader :uuid
+
         class << self
           def find(args)
             super(args)
@@ -142,6 +144,47 @@ module Rack
             AccessGrant.delete('client_id', client_id)
             AccessToken.delete('client_id', client_id)
           end
+
+          def create(attributes=nil)
+            if attributes.is_a?(Array)
+              attributes.collect { |attr| create(attr, &block) }
+            else
+              object = new(attributes)
+              yield(object) if block_given?
+              
+              object.secret = Server.secure_random unless object.secret
+              object.redirect_uri = Server::Utils.parse_redirect_uri(object.redirect_uri).to_s if object.redirect_uri
+              
+              if attributes[:id]
+                object.send(:instance_variable_set, :"@uuid", attributes[:id])
+                ActiveRecord::Base.transaction do
+                  if not is_id_unique?(attributes[:id])
+                    object.add_error(:id, 'Must be unique')
+                  else
+                    object.save
+                  end
+                end
+              else
+                object.send(:instance_variable_set, :"@uuid", UUID.generate(:compact))
+                object.save
+              end
+            
+              object
+            end
+          end
+
+          private
+          def is_id_unique?(id)
+            res = false
+            begin
+              res = (self.select('id').find(id) ? false : true)
+            rescue ActiveRecord::RecordNotFound
+              res =  true
+            end
+
+            res 
+          end
+
         end
 
         def scope
@@ -166,14 +209,12 @@ module Rack
 
         def update_attrs(args)
           self.update_attributes(sanitize_attributes_update(args))
+          self
         end
         
         protected
         def sanitize_attributes_create
-          self.id = UUID.generate(:compact)
-          self.secret = Server.secure_random unless self.secret
-          self.redirect_uri = Server::Utils.parse_redirect_uri(self.redirect_uri).to_s if self.redirect_uri
-          
+          self.id = self.uuid
         end
 
         def serialize_scope
