@@ -19,6 +19,7 @@ puts "Using database: #{ENV['DB']}"
 DATABASE =ENV["DB"]
 
 DATABASE_ADAPTER = URI.parse(DATABASE).scheme
+
 FRAMEWORK = ENV["FRAMEWORK"] || "sinatra"
 
 
@@ -116,9 +117,9 @@ class Test::Unit::TestCase
   attr_reader :client, :end_user
 
   def teardown
-    Server::Client.collection.drop rescue Server::Client.delete_all
-    Server::AuthRequest.collection.drop rescue Server::AuthRequest.delete_all
-    Server::AccessGrant.collection.drop rescue Server::AccessGrant.delete_all
-    Server::AccessToken.collection.drop rescue Server::AccessToken.delete_all
+    Server::Client.collection.drop rescue Server.database[:clients].delete
+    Server::AuthRequest.collection.drop rescue Server.database[:auth_requests].delete
+    Server::AccessGrant.collection.drop rescue Server.database[:access_grants].delete
+    Server::AccessToken.collection.drop rescue Server.database[:access_tokens].delete
   end
 end

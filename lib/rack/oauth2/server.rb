@@ -306,6 +306,7 @@ module Rack
             # Create object to track authorization request and let application
             # handle the rest.
             auth_request = AuthRequest.create(client, requested_scope, redirect_uri.to_s, response_type, state)
+
             uri = URI.parse(request.url)
             uri.query = "authorization=#{auth_request.id.to_s}"
             return redirect_to(uri, 303)

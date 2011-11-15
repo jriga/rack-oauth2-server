@@ -292,8 +292,8 @@ class AuthorizationTest < Test::Unit::TestCase
       case DATABASE_ADAPTER
       when 'mongodb'
         Rack::OAuth2::Server::Client.collection.update({ :_id=>client._id }, { :$set=>{ :redirect_uri=>nil } })
-      when 'mysql'
-        client.update_attributes(:redirect_uri=>nil)
+      when 'mysql2'
+        Rack::OAuth2::Server::Client.table.filter(:id => client.id).update(:redirect_uri=>nil)
       else
         raise "unknown db adapter #{DATABASE_ADAPTER}"
       end

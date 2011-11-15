@@ -46,8 +46,8 @@ module Rack
             require ::File.dirname(__FILE__) + "/models/adapters/#{db_uri.scheme}_adapter"
             @database_adapter = db_uri.scheme
             @database = Adapter.connect!(Server.options.database)
-          rescue
-            raise "Unknown database adapter '#{db_uri.scheme}'. Use mongodb://username:password@localhost:27017/database or mysql://username:password@localhost:3306/database"
+#          rescue
+#            raise "Unknown database adapter '#{db_uri.scheme}'. Use mongodb://username:password@localhost:27017/database or mysql://username:password@localhost:3306/database"
           end
           
         end

@@ -13,8 +13,8 @@ class ServerTest < Test::Unit::TestCase
       case uri.scheme
       when 'mongodb'
         assert_equal Mongo::DB, Server.database.class
-      when 'mysql'
-        assert_equal ActiveRecord::ConnectionAdapters::Mysql2Adapter, Server.database.class
+      when 'mysql2'
+        assert_equal Sequel::Mysql2::Database, Server.database.class
       else
         assert_equal DATABASE, Server.database
       end
