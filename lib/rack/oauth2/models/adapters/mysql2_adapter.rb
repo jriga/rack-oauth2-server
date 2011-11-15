@@ -10,7 +10,6 @@ module Rack
 
         class Migration
           def self.up(db)
-            puts db.inspect
             puts "Running migration"
             
             db.create_table :clients do
@@ -91,8 +90,6 @@ module Rack
             database = Sequel.connect(uri)
             version = current_version(database)
 
-            puts "current_version: #{version}"
-            puts "SCHEMA_VERSION: #{SCHEMA_VERSION}"
             if version < SCHEMA_VERSION
               database.transaction do
                 Migration.up(database)
