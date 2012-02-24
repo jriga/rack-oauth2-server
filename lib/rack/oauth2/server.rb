@@ -30,6 +30,7 @@ module Rack
         # @param [String] client_id Client identifier (e.g. from oauth.client.id)
         # @return [Client]
         def get_client(client_id)
+          return client_id if Client === client_id
           init_db
           Client.find(client_id)
         end
