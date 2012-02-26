@@ -1,4 +1,9 @@
 require "sinatra/base"
+begin
+  require "sinatra/version"
+rescue LoadError
+  # Sinatra < 1.3
+end
 require "json"
 require "rack/oauth2/server"
 require "rack/oauth2/sinatra"
@@ -78,11 +83,13 @@ module Rack
         set :logger, ::Rails.logger if defined?(::Rails)
         # Number of tokens to return in each page.
         set :tokens_per_page, 100
-        if ::Sinatra::VERSION.split('.')[1].to_i >= 3
+
+        if ::Sinatra.const_defined?("VERSION") && Gem::Version.new(::Sinatra::VERSION) >= Gem::Version.new("1.3.0")
           set :public_folder, ::File.dirname(__FILE__) + "/../admin"
         else
           set :public, ::File.dirname(__FILE__) + "/../admin"
-        end
+        end        
+
         set :method_override, true
         mime_type :js, "text/javascript"
         mime_type :tmpl, "text/x-jquery-template"
@@ -99,7 +106,7 @@ module Rack
 
         # It's a single-page app, this is that single page.
         get "/" do
-          if ::Sinatra::VERSION.split('.')[1].to_i >= 3
+          if ::Sinatra.const_defined?("VERSION") && Gem::Version.new(::Sinatra::VERSION) >= Gem::Version.new("1.3.0")
             send_file settings.public_folder + "/views/index.html"
           else
             send_file settings.public + "/views/index.html"
@@ -109,7 +116,7 @@ module Rack
         # Service JavaScript, CSS and jQuery templates from the gem.
         %w{js css views}.each do |path|
           get "/#{path}/:name" do
-            if ::Sinatra::VERSION.split('.')[1].to_i >= 3
+            if ::Sinatra.const_defined?("VERSION") && Gem::Version.new(::Sinatra::VERSION) >= Gem::Version.new("1.3.0")
               send_file settings.public_folder + "/#{path}/" + params[:name]
             else
               send_file settings.public + "/#{path}/" + params[:name]
