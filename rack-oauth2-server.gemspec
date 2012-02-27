@@ -26,4 +26,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'mysql2', '>=0.3.8'
   spec.add_dependency "bson_ext"
   spec.add_dependency "sinatra", "~>1.1"
+  spec.add_dependency "json"
 end
