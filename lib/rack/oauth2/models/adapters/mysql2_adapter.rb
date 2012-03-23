@@ -227,15 +227,20 @@ module Rack
             token = new(attrs) if attrs
             
             unless token
-              expires_at = Time.now.to_i + expires if expires && expires != 0
-              attrs = {:token => Server.secure_random, :identity => identity, :scope => scope.join(' '),
-                :client_id => client.id, :expires_at => expires_at, :revoked => nil}
-
-              table.insert(attrs)
-              token = new(table.where(:token => attrs[:token]).first)
+              return create_token_for(client, scope, identity, expires)
             end
-            Client.table.where(:id => client.id).update(:tokens_granted => (client.tokens_granted + 1))
 
+            token
+          end
+
+          def create_token_for(client, scope, identity = nil, expires = nil)
+            expires_at = Time.now.to_i + expires if expires && expires != 0
+            attrs = {:token => Server.secure_random, :identity => identity, :scope => scope.join(' '),
+              :client_id => client.id, :expires_at => expires_at, :revoked => nil}
+            
+            table.insert(attrs)
+            token = new(table.where(:token => attrs[:token]).first)
+            Client.table.where(:id => client.id).update(:tokens_granted => (client.tokens_granted + 1))
             token
           end
 
