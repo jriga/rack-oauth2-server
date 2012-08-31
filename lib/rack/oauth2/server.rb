@@ -168,7 +168,7 @@ module Rack
       #   end
       Options = Struct.new(:access_token_path, :authenticator, :authorization_types,
         :authorize_path, :database, :database_adapter, :host, :param_authentication, :path, :realm, 
-        :expires_in,:logger)
+        :expires_in,:logger,:collection_prefix)
 
       # Global options. This is what we set during configuration (e.g. Rails'
       # config/application), and options all handlers inherit by default.
@@ -186,6 +186,7 @@ module Rack
         @options.authorize_path ||= "/oauth/authorize"
         @options.authorization_types ||=  %w{code token}
         @options.param_authentication ||= false
+        @options.collection_prefix ||= "oauth2"
       end
 
       # Options specific for this handle. @see Options

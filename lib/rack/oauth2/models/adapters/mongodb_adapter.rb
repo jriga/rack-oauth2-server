@@ -82,7 +82,8 @@ module Rack
           end
 
           def collection
-            Server.database["oauth2.clients"]
+            prefix = Server.options[:collection_prefix]
+            Server.database["#{prefix}.clients"]
           end
         end
 
@@ -219,7 +220,8 @@ module Rack
           end
 
           def collection
-            Server.database["oauth2.access_tokens"]
+            prefix = Server.options[:collection_prefix]
+            Server.database["#{prefix}.access_tokens"]
           end
         end
 
@@ -298,7 +300,8 @@ module Rack
           end
 
           def collection
-            Server.database["oauth2.auth_requests"]
+            prefix = Server.options[:collection_prefix]
+            Server.database["#{prefix}.auth_requests"]
           end
         end
 
@@ -384,7 +387,8 @@ module Rack
           end
 
           def collection
-            Server.database["oauth2.access_grants"]
+            prefix = Server.options[:collection_prefix]
+            Server.database["#{prefix}.access_grants"]
           end
         end
 
